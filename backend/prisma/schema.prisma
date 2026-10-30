@@ -1,0 +1,130 @@
+// Prisma Schema for SaveSphere - Personal Finance Management & Goal Planner
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String          @id @default(uuid())
+  email          String          @unique
+  password       String
+  fullName       String
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  incomes        Income[]
+  expenses       Expense[]
+  budgets        Budget[]
+  goals          FinancialGoal[]
+  emis           EMI[]
+  emergencyFunds EmergencyFund[]
+
+  @@map("users")
+}
+
+model Income {
+  id          String   @id @default(uuid())
+  userId      String
+  source      String
+  amount      Float
+  category    String
+  frequency   String   // MONTHLY, ONE_TIME, ANNUALLY, etc.
+  date        DateTime
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("incomes")
+}
+
+model Expense {
+  id          String   @id @default(uuid())
+  userId      String
+  title       String
+  amount      Float
+  category    String
+  date        DateTime
+  isRecurring Boolean  @default(false)
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("expenses")
+}
+
+model Budget {
+  id          String   @id @default(uuid())
+  userId      String
+  category    String
+  amount      Float
+  period      String   // MONTHLY, YEARLY
+  startDate   DateTime
+  endDate     DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("budgets")
+}
+
+model FinancialGoal {
+  id            String   @id @default(uuid())
+  userId        String
+  title         String
+  targetAmount  Float
+  currentAmount Float    @default(0.0)
+  targetDate    DateTime
+  priority      String   // HIGH, MEDIUM, LOW
+  category      String   // SAVINGS, INVESTMENT, PURCHASE, RETIREMENT
+  status        String   @default("IN_PROGRESS") // IN_PROGRESS, ACHIEVED, PAUSED
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("financial_goals")
+}
+
+model EMI {
+  id             String   @id @default(uuid())
+  userId         String
+  loanName       String
+  lender         String?
+  totalAmount    Float
+  monthlyAmount  Float
+  interestRate   Float?
+  startDate      DateTime
+  endDate        DateTime
+  remainingAmount Float
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("emis")
+}
+
+model EmergencyFund {
+  id            String   @id @default(uuid())
+  userId        String
+  targetAmount  Float
+  currentAmount Float    @default(0.0)
+  monthlyExpensesFloat Float
+  targetMonths  Int      @default(6)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("emergency_funds")
+}
